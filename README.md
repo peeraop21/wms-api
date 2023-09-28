@@ -69,6 +69,9 @@ $ npm run migration:run
 
 # revert migration
 $ npm run migration:revert
+
+#generate schema from database
+typeorm-model-generator -h <ServerName> -d <DatabaseName> -u <Username> -x <Password> -e mssql -o .
 ```
 
 ## Support

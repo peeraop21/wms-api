@@ -52,38 +52,30 @@ export class ReceivingDataController {
     async getReceiveByJobNo(@Query() request: GetReceiveByJobNoDtoRequest): Promise<GetReceiveByJobNoDtoResponse> {
         try {
             const _useStatus = await this.receivingDataService.getUseStatusByJobNoAsync(request.jobNo)
-            if(_useStatus == null) throw ResponseStatus.DATA_NOT_FOUND
-            let result: GetReceiveByJobNoDtoResponse = {
-                custRefNo: '',
-                ownerCode: '',
-                ownerNameENG: '',
-                qtyOfGoods: 0,
-                qtyOfReceived: 0,
-                qtyWaitForReceive: 0,
-                usedStatus: 0,
-            }
-            if(_useStatus == true){
+            if (_useStatus == null) throw ResponseStatus.DATA_NOT_FOUND
+            let result: GetReceiveByJobNoDtoResponse;
+            if (_useStatus == true) {
                 const _data = await this.receivingDataService.getOneWHConfirmGoodsReceiveByJobNoAsync(request.jobNo)
                 result.custRefNo = _data.custRefNo
                 result.ownerCode = _data.ownerCode
-                result.ownerNameENG= _data.ownerNameEng
+                result.ownerNameENG = _data.ownerNameEng
                 result.qtyOfGoods = _data.quantityOfPart
                 result.qtyOfReceived = _data.quantityOfPart
                 result.qtyWaitForReceive = _data.quantityOfPart
                 result.usedStatus = 1
-            }else{
+            } else {
                 const _data = await this.receivingDataService.getOneWHPrepairGoodsReceiveByJobNoAsync(request.jobNo)
                 result.custRefNo = _data.custRefNo
                 result.ownerCode = _data.ownerCode
-                result.ownerNameENG= _data.ownerNameEng
+                result.ownerNameENG = _data.ownerNameEng
                 result.qtyOfGoods = _data.quantityOfPart
                 result.qtyOfReceived = _data.quantityOfPart
                 result.qtyWaitForReceive = _data.quantityOfPart
                 result.usedStatus = 0
-            }   
+            }
             return result
 
-            
+
         } catch (error) {
             throw handleException(error)
         }
@@ -92,11 +84,15 @@ export class ReceivingDataController {
     @Post('confirmNewReceive')
     async confirmNewReceive(@Body() request: ConfirmNewReceiveDtoRequest): Promise<ConfirmNewReceiveDtoResponse> {
         try {
-            const result: ConfirmNewReceiveDtoResponse = {
+            const _prepairGoods = await this.receivingDataService.getOneWHPrepairGoodsReceiveByJobNoAsync(request.jobNo)
+            if (_prepairGoods == null) throw ResponseStatus.DATA_NOT_FOUND
+            if (_prepairGoods.usedStatus == false || _prepairGoods.usedStatus == null) {
+                await this.receivingDataService.confirmNewReceiveByPrepairGoodsAsync(_prepairGoods, request.userName)
+            }
+            return {
                 code: ResponseStatus.SUCCESS,
                 message: ResponseMessages.SUCCESS,
-            }
-            return result
+            } as ConfirmNewReceiveDtoResponse
         } catch (error) {
             throw handleException(error)
         }
@@ -107,22 +103,23 @@ export class ReceivingDataController {
     @Get('getGRDetailList')
     async getGRDetailList(@Query() request: GetGRDetailListDtoRequest): Promise<GetGRDetailListDtoResponse> {
         try {
-            const dataDetail: GetGRDetailListDataDetail[] = []
-            dataDetail.push({
-                itemNo: '',
-                quantity: 0,
-                quantityUnit: 0,
-                receiveDate: '',
+            const _data = await this.receivingDataService.getWHPrepairGoodsReceiveDetailByJobNoAsync(request.jobNo, request.ownerPN, request.customerLotNo)
+            if (_data == null || _data.length == 0) throw ResponseStatus.DATA_NOT_FOUND
+            const dataDetail = _data.map(s => {
+                return {
+                    itemNo: s.itemNo,
+                    quantity: s.quantity,
+                    quantityUnit: s.quantityUnit,
+                    receiveDate: s.receiveDate
+                } as GetGRDetailListDataDetail
             })
-
-            const result: GetGRDetailListDtoResponse = {
+            return {
                 jobNo: request.jobNo,
                 ownerPart: request.ownerPN,
                 customerLotNo: request.customerLotNo,
-                rowCnt: 0,
+                rowCnt: _data.length,
                 dataDetail: dataDetail,
-            }
-            return result
+            } as GetGRDetailListDtoResponse
         } catch (error) {
             throw handleException(error)
         }
@@ -131,19 +128,21 @@ export class ReceivingDataController {
     @Get('getGRDetail')
     async getGRDetail(@Query() request: GetGRDetailDtoRequest): Promise<GetGRDetailDtoResponse> {
         try {
-            const result: GetGRDetailDtoResponse = {
-                whSite: '',
-                whLocation: '',
-                itemNo: '',
-                productDesc: '',
-                receiveDate: '',
-                quantity: 0,
-                quantityUnit: 0,
-                receivedQuantity: 0,
-                qtyNotReceive: 0,
-                status: '',
-            }
-            return result
+            const _data = await this.receivingDataService.getGoodsReceive(request.jobNo, request.ownerPN, request.customerLotNo, request.itemNo)
+            if (_data == null) throw ResponseStatus.DATA_NOT_FOUND
+
+            return {
+                whSite: _data.WHSite,
+                whLocation: _data.WHLocation,
+                itemNo: _data.ItemNo,
+                productDesc: _data.ProductDesc,
+                receiveDate: _data.ReceiveDate,
+                quantity: _data.qtyRequested,
+                quantityUnit: _data.QuantityUnit,
+                receivedQuantity: _data.receivedQuantity,
+                qtyNotReceive: _data.qtyNotReceive,
+                status: _data.Type,
+            } as GetGRDetailDtoResponse
         } catch (error) {
             throw handleException(error)
         }

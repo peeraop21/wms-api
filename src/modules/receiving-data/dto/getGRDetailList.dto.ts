@@ -52,6 +52,6 @@ export class GetGRDetailListDtoResponse {
 export class GetGRDetailListDataDetail {
     public itemNo: string
     public quantity: number
-    public quantityUnit: number
-    public receiveDate: string
+    public quantityUnit: string
+    public receiveDate: Date
 }

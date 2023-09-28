@@ -52,7 +52,7 @@ export class GetGRDetailDtoResponse {
     @ApiProperty()
     @IsNotEmpty()
     @IsString()
-    public receiveDate: string
+    public receiveDate: Date
 
     @ApiProperty()
     @IsNotEmpty()

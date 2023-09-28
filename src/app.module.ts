@@ -7,10 +7,17 @@ import { AuthenticateModule } from './modules/authenticate/authenticate.module'
 import { ReceivingDataModule } from './modules/receiving-data/receiving-data.module'
 import { CheckDataModule } from './modules/check-data/check-data.module'
 import { PickingModule } from './modules/picking/picking.module'
+import { AutomapperModule } from '@automapper/nestjs'
+import { classes } from '@automapper/classes'
 
 
 @Module({
     imports: [
+        AutomapperModule.forRoot(
+            {
+                strategyInitializer: classes(),
+            }
+        ),
         // ConfigModule.forRoot({
         //     isGlobal: true,
         // }),
